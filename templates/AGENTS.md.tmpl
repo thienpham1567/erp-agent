@@ -1,0 +1,52 @@
+# Agent Instructions — {{PROJECT_NAME}}
+
+This project is configured with the **erp-agent** framework (v{{FRAMEWORK_VERSION}}).
+
+## Paths
+- Framework skills: `{{FRAMEWORK_ROOT}}/skills/`
+- Framework lib:    `{{FRAMEWORK_ROOT}}/lib/`
+- Project profile:  `./.agent/`
+- Extraction dir:   `./_extract/<task-id>/`  (Figma + Confluence artifacts, gitignored)
+
+## Load order (session start)
+Before your first response, load these in order:
+1. `./.agent/README.md`        (routing table; do what it says)
+2. `./.agent/context/01-stack.md`
+3. `./.agent/context/02-architecture.md`
+4. `./.agent/context/03-conventions.md`
+
+## Trigger table
+| User input | Load skill file | Purpose |
+|---|---|---|
+| Vague or multi-part request | `01-brainstorm.md` **after asking "Brainstorm trước không?"** | Clarify requirements |
+| `EC <figma-url> [spec=<cf-url>] [target]` | `02-extract-context.md` | Pull design context + optional spec |
+| `PL` | `03-plan-feature.md` | Write implementation plan |
+| `SD` | `04-scaffold-data.md` | Types / API / hooks |
+| `TC <figma-url> [spec=<cf-url>] [target]` | Chain 02 → 03 → 04 → `05-transform-code.md` → 07 | Full feature |
+| `CS <confluence-url>` | `06-fetch-spec.md` | Fetch wiki → markdown |
+| `VF` | `07-verify.md` | typecheck + lint (+ tests if user asks) |
+| `RV` | `08-code-review.md` | Severity-graded review |
+| `RF <path>` | `09-refactor-scan.md` | Scope refactor proposals |
+
+Every skill file lives under `{{FRAMEWORK_ROOT}}/skills/`. Load by reading the file; do not summarise from memory.
+
+## Hard gates
+1. **No code before a plan.** If no plan exists and the user did not say "skip plan", load `03-plan-feature.md` first.
+2. **No hardcoded tokens.** All colors / spacing / radii / typography must map to entries in `./.agent/ui/01-tokens.md`. If the token is missing, add it there first, then use it.
+3. **Grep before build.** Before creating a new shared component, grep `./.agent/ui/components/` for a match. Only build new if nothing fits.
+4. **Data layer before UI.** `04-scaffold-data.md` must complete before `05-transform-code.md` starts.
+
+## Brainstorm policy
+For vague, multi-screen, or architecturally unclear requests, first ask:
+> "Bạn muốn brainstorm trước không? (yes/no)"
+- `yes` → load `01-brainstorm.md`
+- `no`  → proceed directly to `03-plan-feature.md`
+- Small, well-specified tasks skip this prompt.
+
+## TDD policy
+`07-verify.md` runs typecheck + lint by default. Run tests only if the user asks, or if the task is explicitly a bug fix that should add a regression test.
+
+## Response style
+- Acknowledge which skill file you loaded before executing its steps.
+- Cite file paths with `[name](path)` markdown links so the IDE can jump.
+- Follow each skill's checklist as a to-do ledger. Tick items as you go.
