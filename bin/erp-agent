@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FRAMEWORK_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")/.." && pwd)"
+VERSION="0.1.0"
+
+usage() {
+  cat <<EOF
+erp-agent ${VERSION}
+Usage: erp-agent <command>
+Commands:
+  init      Scaffold .agent/ and AGENTS.md into the current project
+  update    git pull the framework and report template drift
+  doctor    Validate .agent/profile.json against the schema
+  version   Print framework version
+EOF
+}
+
+cmd_version() { echo "erp-agent ${VERSION}"; }
+
+cmd_update() {
+  echo "Updating framework at ${FRAMEWORK_ROOT} ..."
+  git -C "${FRAMEWORK_ROOT}" pull --ff-only
+}
+
+ask() {
+  local prompt="$1" default="${2:-}" reply
+  if [[ -n "${default}" ]]; then
+    read -r -p "${prompt} [${default}]: " reply
+    echo "${reply:-${default}}"
+  else
+    read -r -p "${prompt}: " reply
+    echo "${reply}"
+  fi
+}
+
+interpolate() {
+  local src="$1" dst="$2"
+  shift 2
+  local content
+  content="$(cat "${src}")"
+  for pair in "$@"; do
+    case "${pair}" in
+      --*=*)
+        local key="${pair%%=*}"; key="${key#--}"
+        local val="${pair#*=}"
+        content="${content//\{\{${key}\}\}/${val}}"
+        ;;
+    esac
+  done
+  mkdir -p "$(dirname "${dst}")"
+  printf '%s\n' "${content}" > "${dst}"
+}
+
+cmd_init() {
+  local target="${PWD}"
+  if [[ -d "${target}/.agent" ]]; then
+    echo "error: .agent/ already exists at ${target}. Aborting." >&2
+    exit 1
+  fi
+
+  echo "Initializing erp-agent profile at ${target}"
+  local project_name next_version state_lib i18n_lib ui_package
+  project_name="$(ask "Project name" "$(basename "${target}")")"
+  next_version="$(ask "Next.js version" "14")"
+  state_lib="$(ask "State library (rtk-query|react-query|swr|other)" "rtk-query")"
+  i18n_lib="$(ask "i18n library" "react-i18next")"
+  ui_package="$(ask "Shared UI package alias" "@shared/ui")"
+
+  local src="${FRAMEWORK_ROOT}/templates"
+  local dst="${target}"
+
+  while IFS= read -r -d '' f; do
+    local rel="${f#${src}/}"
+    local out="${dst}/${rel%.tmpl}"
+    interpolate "${f}" "${out}" \
+      --PROJECT_NAME="${project_name}" \
+      --NEXT_VERSION="${next_version}" \
+      --STATE_LIB="${state_lib}" \
+      --I18N_LIB="${i18n_lib}" \
+      --UI_PACKAGE="${ui_package}" \
+      --FRAMEWORK_ROOT="${FRAMEWORK_ROOT}" \
+      --FRAMEWORK_VERSION="${VERSION}"
+  done < <(find "${src}" -type f -print0)
+
+  echo "✅ Profile written to ${target}/.agent/"
+  echo "✅ AGENTS.md written to ${target}/AGENTS.md"
+  echo "Next: edit .agent/context/*.md to reflect your project."
+}
+
+cmd_doctor() {
+  local profile="${PWD}/.agent/profile.json"
+  if [[ ! -f "${profile}" ]]; then
+    echo "error: no .agent/profile.json in ${PWD}" >&2
+    exit 1
+  fi
+  node -e "
+    const profile = JSON.parse(require('fs').readFileSync('${profile}','utf8'));
+    const schema = JSON.parse(require('fs').readFileSync('${FRAMEWORK_ROOT}/schema/profile.schema.json','utf8'));
+    const required = schema.required || [];
+    for (const key of required) {
+      if (!(key in profile)) { console.error('missing required field:', key); process.exit(1); }
+    }
+    console.log('profile.json: ok');
+  "
+}
+
+main() {
+  local cmd="${1:-}"
+  case "${cmd}" in
+    init) cmd_init ;;
+    update) cmd_update ;;
+    doctor) cmd_doctor ;;
+    version|--version|-v) cmd_version ;;
+    ""|help|--help|-h) usage ;;
+    *) echo "unknown command: ${cmd}"; usage; exit 1 ;;
+  esac
+}
+
+main "$@"
