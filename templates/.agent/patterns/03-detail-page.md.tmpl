@@ -1,0 +1,35 @@
+# Pattern — Detail Page (Tabs)
+
+```tsx
+'use client'
+
+import { PageTabs, PageTabsContent } from '{{UI_PACKAGE}}/components/PageTabs'
+import { useTabUrl } from '@shared/utils/hooks'
+import dynamic from 'next/dynamic'
+
+const GeneralInfo = dynamic(() => import('../components/GeneralInfo'))
+const ConfigTab = dynamic(() => import('../components/ConfigTab'))
+
+export default function {Feature}DetailPage() {
+  const { t } = useTranslation()
+  const { activeTab, setActiveTab } = useTabUrl({ defaultTab: 'general', paramName: 'tab' })
+
+  const tabs = useMemo(() => [
+    { value: 'general', label: t('{FEATURE}.TAB_GENERAL') },
+    { value: 'config',  label: t('{FEATURE}.TAB_CONFIG')  },
+  ], [t])
+
+  return (
+    <div className="space-y-6 p-6">
+      <PageTabs tabs={tabs} value={activeTab} onValueChange={setActiveTab}>
+        <PageTabsContent value="general"><GeneralInfo data={data} loading={isFetching} /></PageTabsContent>
+        <PageTabsContent value="config"><ConfigTab id={id} /></PageTabsContent>
+      </PageTabs>
+    </div>
+  )
+}
+```
+
+Rules:
+- Tab content components use `dynamic()` to code-split.
+- Sync tab state to the URL via `useTabUrl`.

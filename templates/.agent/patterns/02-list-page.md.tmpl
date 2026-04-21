@@ -1,0 +1,72 @@
+# Pattern — List Page (DataTable)
+
+Two modes. Detect from the spec: paginated API → server-side; small local dataset → client-side.
+
+## Server-side
+
+Required shape:
+- Response: `ApiListResponse<T>` from `@shared/store/api` (`items`, `total`, `totalPages`, `page`, `limit`).
+- State: `usePageTableState()` from `@/hooks/usePageTableState`.
+- Pass `baseQueryParams` to the query hook. The API returns pre-sliced data.
+
+```tsx
+'use client'
+
+import { DataTable, type TableColumn } from '{{UI_PACKAGE}}/components/table'
+import { usePageTableState } from '@/hooks/usePageTableState'
+import { useRowNavigation } from '@shared/utils/hooks'
+import type { ApiListResponse } from '@shared/store/api'
+
+export default function {Feature}ListPage() {
+  const { t } = useTranslation()
+  const { pagination, setPagination, columnFilters, handleColumnFiltersChange,
+          handleGlobalFilterChange, baseQueryParams } = usePageTableState()
+  const handleRowClick = useRowNavigation('/{features}')
+
+  const { data, isLoading, isFetching } = useGet{Feature}sQuery(baseQueryParams)
+  const items = data?.items ?? []
+  const total = data?.total ?? 0
+  const totalPages = data?.totalPages
+
+  const columns: TableColumn<{Feature}>[] = useMemo(() => [
+    { accessorKey: 'field', header: t('{FEATURE}.FIELD'), cell: ({ row }) => <span>{row.original.field}</span> },
+  ], [t])
+
+  return (
+    <DataTable
+      data={items}
+      columns={columns}
+      loading={isLoading || isFetching}
+      pagination={{ ...pagination, totalPages, totalRows: total }}
+      onPaginationChange={setPagination}
+      onRowClick={handleRowClick}
+      className="border-0"
+      paginationClassName="border-0 shadow-none"
+    />
+  )
+}
+```
+
+Key rules:
+- `pagination={{ ...pagination, totalPages, totalRows: total }}` — spread; do NOT compute `Math.ceil` manually.
+- Do NOT slice data on the client — the API returns only the current page.
+
+## Client-side
+
+```tsx
+<DataTable
+  data={allItems}
+  columns={columns}
+  loading={isLoading}
+  showPagination={false}
+  manualFiltering={false}
+  manualPagination={false}
+  globalFilterPlaceholder={t('SEARCH_PLACEHOLDER')}
+/>
+```
+
+## Toolbar: filter vs search
+Independent flags: `enableGlobalFilter` (search), `enableFilterData` + `filterConfigs` (filters).
+- Filter only: `enableFilterData` + `filterConfigs` + `enableGlobalFilter={false}`
+- Search only: `enableGlobalFilter` (default)
+- Both: all three set

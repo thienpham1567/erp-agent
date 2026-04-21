@@ -1,0 +1,39 @@
+# Pattern — Form Page
+
+```tsx
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { TextField, DropdownForm } from '{{UI_PACKAGE}}/components/form'
+import { Button } from '{{UI_PACKAGE}}/shadcn-components/button'
+
+type {Feature}FormValues = { name: string; status: string }
+
+export default function {Feature}FormPage() {
+  const { t } = useTranslation()
+  const { control, handleSubmit, formState } = useForm<{Feature}FormValues>({
+    defaultValues: { name: '', status: 'active' },
+  })
+  const [create{Feature}, { isLoading }] = useCreate{Feature}Mutation()
+
+  const onSubmit = handleSubmit(async (values) => {
+    await create{Feature}(values).unwrap()
+    // navigate / toast
+  })
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4 p-6">
+      <TextField control={control} name="name" label={t('{FEATURE}.NAME')} rules={{ required: true }} />
+      <DropdownForm control={control} name="status" label={t('{FEATURE}.STATUS')} options={STATUS_OPTIONS} />
+      <Button type="submit" disabled={isLoading || !formState.isValid}>
+        {t('COMMON.SUBMIT')}
+      </Button>
+    </form>
+  )
+}
+```
+
+Rules:
+- Use `{{UI_PACKAGE}}/components/form` wrappers, not raw inputs, inside forms.
+- Guard submission with `formState.isValid` and the mutation's `isLoading`.
+- For unsaved-changes warning, wrap with `useUnsavedChanges`.

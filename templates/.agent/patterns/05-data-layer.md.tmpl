@@ -1,0 +1,47 @@
+# Pattern — Data Layer
+
+Rule: always create the data layer BEFORE writing any UI component.
+
+## Files, in order
+1. `{feature}.type.ts`   — entity + request/response types
+2. `{feature}-api.ts`    — {{STATE_LIB}} endpoints and tag types
+3. `hooks/use{Feature}.ts` — thin wrappers around generated hooks
+
+## Example: RTK Query
+
+```ts
+// {feature}.type.ts
+export type {Feature} = { id: string; name: string; status: 'active' | 'inactive' }
+export type Create{Feature}Input = Omit<{Feature}, 'id'>
+
+// {feature}-api.ts
+import { createApi } from '@reduxjs/toolkit/query/react'
+import type { ApiListResponse, BaseQueryParams } from '@shared/store/api'
+import type { {Feature}, Create{Feature}Input } from './{feature}.type'
+
+export const {feature}Api = createApi({
+  reducerPath: '{feature}Api',
+  baseQuery: /* your baseQuery */,
+  tagTypes: ['{Feature}'],
+  endpoints: (builder) => ({
+    get{Feature}s: builder.query<ApiListResponse<{Feature}>, BaseQueryParams>({
+      query: (params) => ({ url: '/v1/{features}', params }),
+      providesTags: ['{Feature}'],
+    }),
+    get{Feature}: builder.query<{Feature}, string>({
+      query: (id) => ({ url: `/v1/{features}/${id}` }),
+      providesTags: (_r, _e, id) => [{ type: '{Feature}', id }],
+    }),
+    create{Feature}: builder.mutation<{Feature}, Create{Feature}Input>({
+      query: (body) => ({ url: '/v1/{features}', method: 'POST', body }),
+      invalidatesTags: ['{Feature}'],
+    }),
+  }),
+})
+
+export const {
+  useGet{Feature}sQuery,
+  useGet{Feature}Query,
+  useCreate{Feature}Mutation,
+} = {feature}Api
+```
