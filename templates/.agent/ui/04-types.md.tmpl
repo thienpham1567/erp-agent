@@ -1,0 +1,21 @@
+# Shared Types & Constants (`@shared/types`)
+
+| Export | Purpose |
+|---|---|
+| `DEFAULT_PAGINATION` | Default pageSize (used by `usePageTableState`) |
+| `StatusEnum` | Generic Active/Inactive |
+| `OrderStatusEnum` | Order statuses |
+| `PaymentStatusEnum` | Payment statuses |
+| `TicketStatusEnum` | Ticket statuses |
+| `InvoiceStatusEnum` | Invoice statuses |
+| `phoneRegex` | Vietnamese phone validation |
+| `passwordRegex` | Password strength validation |
+| `API_ERROR_CODE` | Standard API error codes |
+
+## Store / API (`@shared/store/api`)
+
+| Export | Purpose |
+|---|---|
+| `ApiListResponse<T>` | Paginated list response shape |
+| `BaseQueryParams` | Standard query params (page, limit, search, sorts) |
+| `getStatusCode` | Extract HTTP status from {{STATE_LIB}} error |

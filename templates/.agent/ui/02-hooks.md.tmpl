@@ -1,0 +1,23 @@
+# Shared Hooks
+
+## `@shared/utils/hooks`
+
+| Hook | Purpose |
+|---|---|
+| `useRowNavigation` | Click handler for table row → detail page navigation |
+| `useTabUrl` | Syncs active tab with URL search params |
+| `useDebounce` | Debounces a value (used internally by DataTable search) |
+| `useFileUpload` | File upload logic with progress tracking |
+| `useDeferredUpload` | Deferred upload (after form submit) |
+| `useCountdownTimer` | Countdown (OTP resend) |
+| `useUnsavedChanges` | Warn on navigating away from unsaved form |
+| `useSidebar` | Sidebar open/close state |
+
+## `@/hooks` (app-specific)
+
+| Hook | Purpose |
+|---|---|
+| `usePageTableState` | Pagination + filters + search for server-side DataTable |
+| `useQueryError` | Standardized error/not-found rendering for {{STATE_LIB}} |
+| `usePermission` | Check user permissions for conditional UI |
+| `useConsumeNavFilters` | Consume one-time navigation filters from URL params |

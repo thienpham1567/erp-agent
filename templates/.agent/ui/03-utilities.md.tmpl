@@ -1,0 +1,29 @@
+# Shared Utilities
+
+## Formatting (`@shared/utils/format`)
+
+| Function | Purpose | Example |
+|---|---|---|
+| `formatVND` | Vietnamese currency | `1.234.567 đ` |
+| `formatCurrency` | Generic currency | `1,234,567` |
+| `formatNumber` | Number with separators | `1,234` |
+| `formatPercentage` | Percentage display | `85%` |
+| `formatPhoneNumber` | Phone | `0912 345 678` |
+| `formatFileSize` | Bytes → human | `1.5 GB` |
+| `formatMBSize` | MB → human | `512 MB` |
+| `formatDuration` | Seconds → readable | `2h 30m` |
+| `truncateText` | Truncate w/ ellipsis | `Long text...` |
+| `getInitials` | Name → initials | `NT` |
+| `maskEmail` | Mask email | `n***@gmail.com` |
+
+## Date (`@shared/utils/dateUtils`)
+
+| Function | Purpose |
+|---|---|
+| `formatDate` | Format date (default `dd/MM/yyyy`) |
+| `formatDateRange` | Range formatter |
+| `formatUtcDate` | Parse UTC string + format |
+| `formatLastReply` | Relative time (e.g. "2 giờ trước") |
+| `daysBetween` | Days between two dates |
+| `addBusinessDays` | Add working days |
+| `isWorkday` | Check if date is workday |
