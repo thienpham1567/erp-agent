@@ -1,0 +1,62 @@
+# Components — Data Display
+
+## DataTable
+- **Path**: `{{UI_PACKAGE}}/components/table`
+- **Use when**: primary content is a data grid (list pages)
+- **Key props**: `data`, `columns`, `loading`, `pagination`, `onPaginationChange`, `onRowClick`
+- **Notes**: Server-side → `manualPagination={true}` + `usePageTableState`; client-side → omit `manualPagination` and pass full dataset.
+- **Pattern**: `patterns/02-list-page.md`
+
+## StringStatusBadge
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: render a status as a colored text badge
+- **Key props**: `status`, `variant`
+
+## NumericStatusBadge
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: render a numeric status code as a badge
+- **Key props**: `code`, `variant`
+
+## SectionHeaderCard
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: section header with blue accent
+
+## SectionHeader
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: plain section header
+
+## EntityHeaderCard
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: summary card with icon at the top of a detail page
+
+## Spinner
+- **Path**: `{{UI_PACKAGE}}/components/Spinner`
+- **Use when**: loading state indicator
+
+## StorageUsageBar
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: resource usage shown as a horizontal bar
+
+## StorageUsageRing
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: resource usage shown as a ring / donut
+
+## InfoTooltip
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: info icon with explanatory tooltip
+
+## SimpleTooltip
+- **Path**: `{{UI_PACKAGE}}/components`
+- **Use when**: hover tooltip on any element
+
+## Field
+- **Path**: `@/app/(protected)/components`
+- **Use when**: read-only key-value row on a detail page
+
+## ServiceStatus
+- **Path**: `@/app/(protected)/components`
+- **Use when**: service status badge (Active/Suspended/etc.)
+
+## ProgressStepper
+- **Path**: `@/app/(protected)/components`
+- **Use when**: multi-step progress indicator
