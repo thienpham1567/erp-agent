@@ -1,0 +1,33 @@
+# Project Rules Index — Read Me First
+
+This folder describes **what this project is**. The framework under `{{FRAMEWORK_ROOT}}` describes **how to work**.
+
+## Session start (ALWAYS load in this order)
+1. `context/01-stack.md`
+2. `context/02-architecture.md`
+3. `context/03-conventions.md`
+
+## Before writing ANY UI code (MANDATORY)
+- `ui/01-tokens.md` — no hardcoded colors, spacing, radii, typography.
+  If the design uses a value with no token, ADD a token first.
+
+## Before creating a new shared component
+1. Guess the category (data-display, forms, dialogs, selects, dates, layout, media, editor, primitives).
+2. Grep `ui/components/<category>.md` for the component you need.
+3. If unclear which category, scan file names in `ui/components/`.
+4. If nothing fits, build the component, then append an entry to the matching category file.
+
+## Building a page
+- List page   → `patterns/02-list-page.md`
+- Detail page → `patterns/03-detail-page.md`
+- Form page   → `patterns/04-form-page.md`
+- Page shell  → `patterns/01-page-shell.md`
+
+## Creating a data layer (types / api / hooks)
+→ `patterns/05-data-layer.md`
+
+## Before claiming a task is done
+→ `checklists/dod-feature.md`
+
+## Environment
+API credentials, MCP tokens, i18n catalog paths are in `context/04-env.md`.
