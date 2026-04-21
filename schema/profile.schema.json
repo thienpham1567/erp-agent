@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://erp-agent.local/profile.schema.json",
+  "title": "erp-agent project profile",
+  "type": "object",
+  "required": ["frameworkVersion", "project", "paths"],
+  "properties": {
+    "frameworkVersion": {
+      "type": "string",
+      "description": "Version of the erp-agent framework this profile was generated with."
+    },
+    "project": {
+      "type": "object",
+      "required": ["name", "stack"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "stack": {
+          "type": "object",
+          "required": ["nextVersion", "stateLib", "i18nLib", "uiPackage"],
+          "properties": {
+            "nextVersion": { "type": "string" },
+            "stateLib": { "type": "string", "enum": ["rtk-query", "react-query", "swr", "other"] },
+            "i18nLib": { "type": "string" },
+            "uiPackage": { "type": "string", "description": "Import alias for the shared UI package, e.g. @shared/ui." }
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "required": ["frameworkRoot", "profileRoot", "extractRoot"],
+      "properties": {
+        "frameworkRoot": { "type": "string", "description": "Absolute path to ~/.erp-agent/." },
+        "profileRoot": { "type": "string", "description": "Path (relative to project root) to .agent/." },
+        "extractRoot": { "type": "string", "description": "Path for Figma/Confluence extraction artifacts." }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "properties": {
+        "figmaEnv": { "type": "string" },
+        "confluenceEnv": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false
+}
