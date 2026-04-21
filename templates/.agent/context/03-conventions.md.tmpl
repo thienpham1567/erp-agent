@@ -1,0 +1,23 @@
+# Conventions
+
+## File naming
+- Components: PascalCase, one component per file (`{Feature}ListPage.tsx`).
+- Hooks: camelCase starting with `use` (`usePageTableState.ts`).
+- Types: `{feature}.type.ts`. API slice: `{feature}-api.ts`.
+
+## Folder layout per feature
+```
+app/(protected)/<feature>/
+├── page.tsx                 (or list/detail/create under subroutes)
+├── components/              feature-scoped components
+├── hooks/                   feature-scoped hooks (app-local)
+└── types.ts                 feature-scoped types if small
+```
+
+## i18n
+- All visible strings go through `t('<FEATURE>.<KEY>')`.
+- Catalog location: <fill path to `en.json` / `vi.json`>.
+- Never inline Vietnamese or English strings in JSX.
+
+## Commit style
+- Conventional Commits. `feat(<feature>): …`, `fix(<feature>): …`, `chore: …`.

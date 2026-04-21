@@ -1,0 +1,21 @@
+# Architecture
+
+## Folder layout
+<fill with the top-level src layout, e.g.:>
+- `apps/client/src/app/(protected)/` — authenticated pages
+- `apps/client/src/hooks/` — app-specific hooks
+- `packages/shared/ui/` — shared design system
+
+## Routing
+- App Router file-based. Route groups in parentheses (`(protected)`) do not affect URL.
+- Server components by default; mark `'use client'` explicitly where hooks are used.
+
+## State
+<fill: RTK Query setup location, store boundary, middleware>
+
+## Import aliases
+- `@/` → `apps/client/src`
+- `{{UI_PACKAGE}}` → `packages/shared/ui`
+- `@shared/utils` → `packages/shared/utils`
+- `@shared/store` → `packages/shared/store`
+- `@shared/types` → `packages/shared/types`
