@@ -9,7 +9,8 @@ This project is configured with the **erp-agent** framework (v{{FRAMEWORK_VERSIO
 - Extraction dir:   `./_extract/<task-id>/`  (Figma + Confluence artifacts, gitignored)
 
 ## Load order (session start)
-Before your first response, load these in order:
+Antigravity does not auto-load files. You (the agent) MUST read these in order
+before the first response — do not wait for a hook:
 1. `./.agent/README.md`        (routing table; do what it says)
 2. `./.agent/context/01-stack.md`
 3. `./.agent/context/02-architecture.md`
@@ -18,7 +19,7 @@ Before your first response, load these in order:
 ## Trigger table
 | User input | Load skill file | Purpose |
 |---|---|---|
-| Vague or multi-part request | `01-brainstorm.md` **after asking "Brainstorm trước không?"** | Clarify requirements |
+| Vague or multi-part request | `01-brainstorm.md` **after asking the brainstorm prompt below** | Clarify requirements |
 | `EC <figma-url> [spec=<cf-url>] [target]` | `02-extract-context.md` | Pull design context + optional spec |
 | `PL` | `03-plan-feature.md` | Write implementation plan |
 | `SD` | `04-scaffold-data.md` | Types / API / hooks |
@@ -38,7 +39,7 @@ Every skill file lives under `{{FRAMEWORK_ROOT}}/skills/`. Load by reading the f
 
 ## Brainstorm policy
 For vague, multi-screen, or architecturally unclear requests, first ask:
-> "Bạn muốn brainstorm trước không? (yes/no)"
+> "Brainstorm first? (yes/no)"  _(or its translation in the project's working language)_
 - `yes` → load `01-brainstorm.md`
 - `no`  → proceed directly to `03-plan-feature.md`
 - Small, well-specified tasks skip this prompt.

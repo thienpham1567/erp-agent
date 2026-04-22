@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FRAMEWORK_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")/.." && pwd)"
+resolve_path() {
+  local p="$1"
+  if command -v readlink >/dev/null 2>&1 && readlink -f "$p" >/dev/null 2>&1; then
+    readlink -f "$p"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$p"
+  else
+    (cd "$(dirname "$p")" && printf '%s/%s\n' "$(pwd -P)" "$(basename "$p")")
+  fi
+}
+
+FRAMEWORK_ROOT="$(cd "$(dirname "$(resolve_path "${BASH_SOURCE[0]}")")/.." && pwd)"
 VERSION="0.1.0"
 
 usage() {
@@ -10,7 +21,7 @@ erp-agent ${VERSION}
 Usage: erp-agent <command>
 Commands:
   init      Scaffold .agent/ and AGENTS.md into the current project
-  update    git pull the framework and report template drift
+  update    git pull the framework (drift detection not implemented)
   doctor    Validate .agent/profile.json against the schema
   version   Print framework version
 EOF
@@ -21,29 +32,45 @@ cmd_version() { echo "erp-agent ${VERSION}"; }
 cmd_update() {
   echo "Updating framework at ${FRAMEWORK_ROOT} ..."
   git -C "${FRAMEWORK_ROOT}" pull --ff-only
+  echo "Note: template drift is not computed automatically."
+  echo "To compare, run 'erp-agent init' in a fresh scratch dir and diff against your .agent/."
 }
 
 ask() {
   local prompt="$1" default="${2:-}" reply
   if [[ -n "${default}" ]]; then
     read -r -p "${prompt} [${default}]: " reply
-    echo "${reply:-${default}}"
+    printf '%s' "${reply:-${default}}"
   else
     read -r -p "${prompt}: " reply
-    echo "${reply}"
+    printf '%s' "${reply}"
   fi
 }
 
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
 interpolate() {
-  local src="$1" dst="$2"
-  shift 2
+  local src="$1" dst="$2" mode="$3"
+  shift 3
   local content
   content="$(cat "${src}")"
+  local pair key val
   for pair in "$@"; do
     case "${pair}" in
       --*=*)
-        local key="${pair%%=*}"; key="${key#--}"
-        local val="${pair#*=}"
+        key="${pair%%=*}"; key="${key#--}"
+        val="${pair#*=}"
+        if [[ "${mode}" == "json" ]]; then
+          val="$(json_escape "${val}")"
+        fi
         content="${content//\{\{${key}\}\}/${val}}"
         ;;
     esac
@@ -58,6 +85,10 @@ cmd_init() {
     echo "error: .agent/ already exists at ${target}. Aborting." >&2
     exit 1
   fi
+  if [[ -f "${target}/AGENTS.md" ]]; then
+    echo "error: AGENTS.md already exists at ${target}. Remove or rename it, then re-run init." >&2
+    exit 1
+  fi
 
   echo "Initializing erp-agent profile at ${target}"
   local project_name next_version state_lib i18n_lib ui_package
@@ -67,13 +98,23 @@ cmd_init() {
   i18n_lib="$(ask "i18n library" "react-i18next")"
   ui_package="$(ask "Shared UI package alias" "@shared/ui")"
 
+  case "${state_lib}" in
+    rtk-query|react-query|swr|other) ;;
+    *) echo "error: stateLib must be one of: rtk-query|react-query|swr|other" >&2; exit 1 ;;
+  esac
+  if [[ -z "${project_name}" ]]; then
+    echo "error: project name cannot be empty" >&2; exit 1
+  fi
+
   local src="${FRAMEWORK_ROOT}/templates"
   local dst="${target}"
 
+  local f rel out mode
   while IFS= read -r -d '' f; do
-    local rel="${f#${src}/}"
-    local out="${dst}/${rel%.tmpl}"
-    interpolate "${f}" "${out}" \
+    rel="${f#${src}/}"
+    out="${dst}/${rel%.tmpl}"
+    if [[ "${out}" == *.json ]]; then mode="json"; else mode="raw"; fi
+    interpolate "${f}" "${out}" "${mode}" \
       --PROJECT_NAME="${project_name}" \
       --NEXT_VERSION="${next_version}" \
       --STATE_LIB="${state_lib}" \
@@ -83,8 +124,15 @@ cmd_init() {
       --FRAMEWORK_VERSION="${VERSION}"
   done < <(find "${src}" -type f -print0)
 
-  echo "✅ Profile written to ${target}/.agent/"
-  echo "✅ AGENTS.md written to ${target}/AGENTS.md"
+  local leftover
+  leftover="$(grep -REho '\{\{[A-Z_]+\}\}' "${dst}/.agent" "${dst}/AGENTS.md" 2>/dev/null | sort -u || true)"
+  if [[ -n "${leftover}" ]]; then
+    echo "warning: un-interpolated placeholders remain:" >&2
+    echo "${leftover}" >&2
+  fi
+
+  echo "Profile written to ${target}/.agent/"
+  echo "AGENTS.md written to ${target}/AGENTS.md"
   echo "Next: edit .agent/context/*.md to reflect your project."
 }
 
@@ -94,15 +142,47 @@ cmd_doctor() {
     echo "error: no .agent/profile.json in ${PWD}" >&2
     exit 1
   fi
-  node -e "
-    const profile = JSON.parse(require('fs').readFileSync('${profile}','utf8'));
-    const schema = JSON.parse(require('fs').readFileSync('${FRAMEWORK_ROOT}/schema/profile.schema.json','utf8'));
-    const required = schema.required || [];
-    for (const key of required) {
-      if (!(key in profile)) { console.error('missing required field:', key); process.exit(1); }
+  ERP_PROFILE="${profile}" \
+  ERP_SCHEMA="${FRAMEWORK_ROOT}/schema/profile.schema.json" \
+  node -e '
+    const fs = require("fs");
+    const profile = JSON.parse(fs.readFileSync(process.env.ERP_PROFILE, "utf8"));
+    const schema = JSON.parse(fs.readFileSync(process.env.ERP_SCHEMA, "utf8"));
+    const errors = [];
+    function walk(node, subSchema, path) {
+      if (!subSchema) return;
+      if (subSchema.type === "object") {
+        if (typeof node !== "object" || node === null || Array.isArray(node)) {
+          errors.push(path + ": expected object");
+          return;
+        }
+        for (const key of subSchema.required || []) {
+          if (!(key in node)) errors.push((path || "(root)") + ": missing required " + key);
+        }
+        const props = subSchema.properties || {};
+        for (const [k, v] of Object.entries(node)) {
+          if (props[k]) walk(v, props[k], path ? path + "." + k : k);
+          else if (subSchema.additionalProperties === false) {
+            errors.push((path || "(root)") + ": unexpected property " + k);
+          }
+        }
+      } else if (subSchema.type === "string") {
+        if (typeof node !== "string") { errors.push(path + ": expected string"); return; }
+        if (subSchema.minLength && node.length < subSchema.minLength) {
+          errors.push(path + ": shorter than minLength " + subSchema.minLength);
+        }
+        if (subSchema.enum && !subSchema.enum.includes(node)) {
+          errors.push(path + ": not in enum " + JSON.stringify(subSchema.enum));
+        }
+      }
     }
-    console.log('profile.json: ok');
-  "
+    walk(profile, schema, "");
+    if (errors.length) {
+      for (const e of errors) console.error(e);
+      process.exit(1);
+    }
+    console.log("profile.json: ok");
+  '
 }
 
 main() {

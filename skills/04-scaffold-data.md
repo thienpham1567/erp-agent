@@ -24,6 +24,6 @@ Create types, API slice, and hooks before any UI code.
 - Data layer files under the feature folder, compiling cleanly.
 
 ## Verification
-- [ ] `tsc --noEmit` passes for the feature folder.
+- [ ] `tsc --noEmit` passes for the project (run from repo root — `tsc` checks the whole project per `tsconfig.json`).
 - [ ] No endpoint missing a tag strategy.
 - [ ] All request/response types reflect the spec exactly.

@@ -40,7 +40,8 @@
       "properties": {
         "figmaEnv": { "type": "string" },
         "confluenceEnv": { "type": "string" }
-      }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": false

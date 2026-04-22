@@ -27,7 +27,7 @@ This file documents the decision tree the agent uses to pick a skill, and declar
 - **Bug fix** (no trigger): if user says "fix bug X", load `03-plan-feature` first unless user says "skip plan"; after implementation, load `07-verify` and add a regression test only if user asked for TDD.
 
 ## Brainstorm gate
-On vague or complex requests, the agent asks: "Bạn muốn brainstorm trước không? (yes/no)". Only load `01-brainstorm.md` on `yes`.
+On vague or complex requests, the agent asks: "Brainstorm first? (yes/no)" (or the project-language equivalent). Only load `01-brainstorm.md` on `yes`.
 
 ## Hard gates (mirror `AGENTS.md`)
 1. No code before a plan (unless "skip plan").
