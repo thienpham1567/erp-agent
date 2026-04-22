@@ -48,7 +48,7 @@ The agent recognises the triggers listed in the generated `AGENTS.md`:
 | `TC` | full chain: EC → PL → SD → code → verify |
 | `CS` | fetch Confluence spec |
 | `VF` | verify (typecheck + lint) |
-| `RV` | code review |
+| `RV` | code review (runs `react-doctor` + manual pass) |
 | `RF` | refactor scan |
 
 Brainstorming is opt-in; the agent asks before running it.

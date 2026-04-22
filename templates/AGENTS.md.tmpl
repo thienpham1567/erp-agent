@@ -26,7 +26,7 @@ before the first response — do not wait for a hook:
 | `TC <figma-url> [spec=<cf-url>] [target]` | Chain 02 → 03 → 04 → `05-transform-code.md` → 07 | Full feature |
 | `CS <confluence-url>` | `06-fetch-spec.md` | Fetch wiki → markdown |
 | `VF` | `07-verify.md` | typecheck + lint (+ tests if user asks) |
-| `RV` | `08-code-review.md` | Severity-graded review |
+| `RV` | `08-code-review.md` | React Doctor + severity-graded manual review |
 | `RF <path>` | `09-refactor-scan.md` | Scope refactor proposals |
 
 Every skill file lives under `{{FRAMEWORK_ROOT}}/skills/`. Load by reading the file; do not summarise from memory.
