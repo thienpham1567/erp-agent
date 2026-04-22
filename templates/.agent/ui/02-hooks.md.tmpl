@@ -1,23 +1,48 @@
-# Shared Hooks
+# Hooks
 
-## `@shared/utils/hooks`
+Two groups: **shared** (workspace-wide, import from `@shared/...`) and
+**per-app** (defined inside a specific app's `src/hooks/` and tied to its
+behavior — auth, permission model, error UX).
+
+Rule: before adding a new hook, grep both tables below for a match. Agents
+that add a duplicate hook get a Major finding in review.
+
+## Shared — `@shared/utils/hooks`
+
+Cross-app utilities. Same behavior in every app.
 
 | Hook | Purpose |
 |---|---|
 | `useRowNavigation` | Click handler for table row → detail page navigation |
 | `useTabUrl` | Syncs active tab with URL search params |
-| `useDebounce` | Debounces a value (used internally by DataTable search) |
-| `useFileUpload` | File upload logic with progress tracking |
+| `useDebounce` | Debounces a value (used by DataTable search) |
+| `useFileUpload` | File upload with progress tracking |
 | `useDeferredUpload` | Deferred upload (after form submit) |
-| `useCountdownTimer` | Countdown (OTP resend) |
+| `useCountdownTimer` | Countdown (OTP resend, etc.) |
 | `useUnsavedChanges` | Warn on navigating away from unsaved form |
 | `useSidebar` | Sidebar open/close state |
+| <fill>             | <fill> |
 
-## `@/hooks` (app-specific)
+## Per-app — `@/hooks` (inside each app)
 
-| Hook | Purpose |
-|---|---|
-| `usePageTableState` | Pagination + filters + search for server-side DataTable |
-| `useQueryError` | Standardized error/not-found rendering for {{STATE_LIB}} |
-| `usePermission` | Check user permissions for conditional UI |
-| `useConsumeNavFilters` | Consume one-time navigation filters from URL params |
+App-specific hooks. Behavior may differ per app (e.g. `useQueryError` in
+admin renders `ForbiddenPage`; in client it toasts). Always import via the
+local `@/hooks` alias, not from a sibling app.
+
+| Hook | App | Purpose |
+|---|---|---|
+| `usePageTableState` | all | Pagination + filters + search for server-side DataTable |
+| `useQueryError` | all (config differs per app — see apps matrix) | Standardised error / not-found / forbidden rendering for {{STATE_LIB}} |
+| `usePermission` | admin (OR-based) / client (AND-based) | Permission checks for conditional UI |
+| `useTabUrl` | all | Syncs tab to URL (local variant over `@shared/utils/hooks` if project overrides) |
+| `useDialogUrl` | all | Sync dialog open state to URL |
+| <fill>       | <fill> | <fill> |
+
+## Rules
+
+- **CRITICAL**: never import a per-app hook from another app. Add a shared
+  abstraction if two apps need the same behavior.
+- **ENFORCED**: new generic hooks go in `@shared/utils/hooks`; new
+  app-specific hooks go in `apps/<app>/src/hooks/`.
+- **ENFORCED**: if a per-app hook diverges across apps, document the
+  difference in `.agent/context/05-apps-matrix.md`.

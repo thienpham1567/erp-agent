@@ -68,7 +68,7 @@ interpolate() {
       --*=*)
         key="${pair%%=*}"; key="${key#--}"
         val="${pair#*=}"
-        if [[ "${mode}" == "json" ]]; then
+        if [[ "${mode}" == "json" && "${key}" != "APPS_JSON" ]]; then
           val="$(json_escape "${val}")"
         fi
         content="${content//\{\{${key}\}\}/${val}}"
@@ -77,6 +77,37 @@ interpolate() {
   done
   mkdir -p "$(dirname "${dst}")"
   printf '%s\n' "${content}" > "${dst}"
+}
+
+build_apps_json() {
+  local csv="$1"
+  if [[ -z "${csv}" ]]; then
+    printf '[]'
+    return
+  fi
+  local entry name path first=1 out='['
+  IFS=',' read -ra entries <<< "${csv}"
+  for entry in "${entries[@]}"; do
+    entry="${entry# }"; entry="${entry% }"
+    [[ -z "${entry}" ]] && continue
+    name="${entry%%:*}"
+    path="${entry#*:}"
+    [[ "${name}" == "${entry}" ]] && path="${name}"
+    name="$(json_escape "${name}")"
+    path="$(json_escape "${path}")"
+    if (( first )); then first=0; else out+=","; fi
+    out+="{\"name\":\"${name}\",\"path\":\"${path}\"}"
+  done
+  out+=']'
+  printf '%s' "${out}"
+}
+
+append_gitignore() {
+  local dir="$1"
+  local file="${dir}/.gitignore"
+  if [[ ! -f "${file}" ]] || ! grep -q '^_extract/\?$' "${file}"; then
+    printf '\n# erp-agent extraction artifacts\n_extract/\n' >> "${file}"
+  fi
 }
 
 cmd_init() {
@@ -91,12 +122,16 @@ cmd_init() {
   fi
 
   echo "Initializing erp-agent profile at ${target}"
-  local project_name next_version state_lib i18n_lib ui_package
+  local project_name next_version state_lib i18n_lib i18n_locales_path ui_package shared_root verify_script apps_csv apps_json
   project_name="$(ask "Project name" "$(basename "${target}")")"
   next_version="$(ask "Next.js version" "14")"
   state_lib="$(ask "State library (rtk-query|react-query|swr|other)" "rtk-query")"
   i18n_lib="$(ask "i18n library" "react-i18next")"
+  i18n_locales_path="$(ask "i18n locales path (relative to repo root)" "shared/i18n/locales")"
   ui_package="$(ask "Shared UI package alias" "@shared/ui")"
+  shared_root="$(ask "Shared packages root (relative to repo root; blank if none)" "shared")"
+  verify_script="$(ask "Verify script to run at VF (blank to use tsc + eslint)" "")"
+  apps_csv="$(ask "Workspace apps as comma-separated name:path (blank = single app)" "")"
 
   case "${state_lib}" in
     rtk-query|react-query|swr|other) ;;
@@ -105,6 +140,8 @@ cmd_init() {
   if [[ -z "${project_name}" ]]; then
     echo "error: project name cannot be empty" >&2; exit 1
   fi
+
+  apps_json="$(build_apps_json "${apps_csv}")"
 
   local src="${FRAMEWORK_ROOT}/templates"
   local dst="${target}"
@@ -119,10 +156,16 @@ cmd_init() {
       --NEXT_VERSION="${next_version}" \
       --STATE_LIB="${state_lib}" \
       --I18N_LIB="${i18n_lib}" \
+      --I18N_LOCALES_PATH="${i18n_locales_path}" \
       --UI_PACKAGE="${ui_package}" \
+      --SHARED_ROOT="${shared_root}" \
+      --VERIFY_SCRIPT="${verify_script}" \
+      --APPS_JSON="${apps_json}" \
       --FRAMEWORK_ROOT="${FRAMEWORK_ROOT}" \
       --FRAMEWORK_VERSION="${VERSION}"
   done < <(find "${src}" -type f -print0)
+
+  append_gitignore "${dst}"
 
   local leftover
   leftover="$(grep -REho '\{\{[A-Z_]+\}\}' "${dst}/.agent" "${dst}/AGENTS.md" 2>/dev/null | sort -u || true)"

@@ -1,26 +1,69 @@
 # Pattern — Page Shell
 
-Every page must render these three states in order: loading → error → content.
+Every page runs these checks in this exact order:
+
+1. **Permission guard** — before any query, before any data read.
+2. **Loading state** — render a Spinner; never return `null`.
+3. **Error state** — render the error element from `useQueryError`.
+4. **Content.**
+
+Skipping the permission guard is a Blocker finding: a user without rights
+should see the forbidden UX (page or toast per the apps matrix), not a 500
+or a blank page.
+
+## Admin / page-based forbidden UX
 
 ```tsx
+'use client'
 import { Spinner } from '{{UI_PACKAGE}}/components/Spinner'
+import { ForbiddenPage } from '@/components/ForbiddenPage'
 import { useQueryError } from '@/hooks/useQueryError'
+import { usePermission } from '@/hooks/usePermission'
+import { ADMIN_PERMISSION } from '@/types/constants'
 
-if (isLoading) {
-  return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-108px)]">
-      <Spinner />
-    </div>
-  )
+export default function FeaturePage() {
+  const { hasPermission, can } = usePermission(ADMIN_PERMISSION.FEATURE_LIST)
+  if (!hasPermission) return <ForbiddenPage />
+
+  const { data, isLoading, error } = useGetFeatureQuery(/* ... */)
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-108px)]">
+        <Spinner />
+      </div>
+    )
+  }
+
+  const { renderError } = useQueryError({ error, hasData: !!data, notFoundKey: '{FEATURE}.NOT_FOUND' })
+  const errorElement = renderError()
+  if (errorElement) return errorElement
+
+  return <div className="space-y-4 p-6">{/* content */}</div>
 }
-
-const { renderError } = useQueryError({ error, hasData: !!data, notFoundKey: '{FEATURE}.NOT_FOUND' })
-const errorElement = renderError()
-if (errorElement) return errorElement
-
-return <div className="space-y-4 p-6">{/* content */}</div>
 ```
 
-Rules:
-- Never return `null` for loading/error — always render the Spinner or error element.
-- The root content wrapper uses `space-y-4 p-6` unless the spec says otherwise.
+## Client / toast-based forbidden UX
+
+For apps where forbidden is handled globally by a toast (see
+`.agent/context/05-apps-matrix.md`), skip the `ForbiddenPage` branch and
+rely on `useQueryError` + the global listener. Do NOT render `ForbiddenPage`
+in client pages.
+
+```tsx
+const { data, isLoading, error } = useGetFeatureQuery(/* ... */)
+// forbidden is a toast emitted by the global listener — no inline render
+if (isLoading) return <Spinner />
+const { renderError } = useQueryError({ error, hasData: !!data })
+const errorElement = renderError()
+if (errorElement) return errorElement
+```
+
+## Rules
+
+- **CRITICAL**: permission check comes before the query. Don't `skip: !hasPermission`
+  unless the state library still fires a request; prefer early-return.
+- **CRITICAL**: pick the forbidden UX from the apps matrix — never mix.
+- **ENFORCED**: never return `null` for loading or error.
+- **ENFORCED**: root content wrapper uses `space-y-4 p-6` unless the spec
+  overrides.

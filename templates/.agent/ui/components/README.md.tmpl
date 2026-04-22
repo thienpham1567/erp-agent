@@ -1,0 +1,48 @@
+# Component Registry
+
+Source of truth for every shared component the agent may reuse. Grep this
+folder **before** building anything new — a custom re-implementation of a
+component that already exists is a Major review finding.
+
+## Primitives vs composites
+
+| Layer | Where it lives | What it contains | When to reach for it |
+|---|---|---|---|
+| **Primitives** | `{{UI_PACKAGE}}/shadcn-components/` | `Button`, `Input`, `Dialog`, `Select`, `Checkbox`, `Popover`, ... | Low-level building blocks. Use directly in small components; wrap for feature-specific variants. |
+| **Composites** | `{{UI_PACKAGE}}/components/` | `DataTable`, `Breadcrumb`, `PageTabs`, `Stepper`, `SectionHeader`, custom selects, date pickers, uploaders | Purpose-built for this product's UX. The categories below index them. |
+
+Primitives are NOT catalogued file-by-file here (shadcn ships a well-known
+set and the project can add them with `pnpm dlx shadcn add <name>`). If you
+need a primitive, check `{{UI_PACKAGE}}/shadcn-components/` first.
+
+Composites are catalogued by category in sibling files:
+
+- `data-display.md`
+- `dates.md`
+- `dialogs.md`
+- `editor.md`
+- `forms.md`
+- `layout.md`
+- `media.md`
+- `primitives.md`  (project-specific primitives on top of shadcn)
+- `selects.md`
+
+## Icons
+
+- **CRITICAL**: icons come from `lucide-react`. Map every Figma icon name to
+  the closest Lucide equivalent. Do NOT import from other icon libraries
+  or inline custom SVGs.
+
+## Grep before build
+
+Quick checks the agent must run before creating a new shared component:
+
+```bash
+# Does the component already exist?
+grep -rni '<component-name>' {{UI_PACKAGE}}/ .agent/ui/components/
+
+# Is it a shadcn primitive we can install instead of hand-rolling?
+ls {{UI_PACKAGE}}/shadcn-components/ | grep -i <name>
+```
+
+If either turns up a match, use it.

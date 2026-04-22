@@ -54,6 +54,8 @@ For every changed file, verify against the items React Doctor cannot know about:
 
 ### 3. Produce findings graded by severity
 
+Default vocabulary: **Blocker / Major / Minor / Nit.**
+
 - **Blocker**: breaks build, contract violation, missing hard gate, OR React
   Doctor `error`-severity diagnostic.
 - **Major**: convention violation, missed reuse, accessibility miss, OR React
@@ -61,6 +63,20 @@ For every changed file, verify against the items React Doctor cannot know about:
 - **Minor**: duplication, dead code, naming drift, remaining React Doctor
   `warning`s.
 - **Nit**: style-only.
+
+**If the project documents its own severity vocabulary** (e.g. the
+`CRITICAL / MANDATORY / ENFORCED / PREFERRED / REFERENCE` scale used in
+`.agent/context/03-conventions.md` or the project's `project-context.md`),
+adopt it and map as follows:
+
+| erp-agent default | Project vocab example |
+|---|---|
+| Blocker | `CRITICAL` / `MANDATORY` |
+| Major   | `ENFORCED` |
+| Minor   | `PREFERRED` |
+| Nit     | `REFERENCE` |
+
+Use **one** vocabulary per report — never mix.
 
 Merge the two passes into one report. If React Doctor and the manual review
 both flag the same issue, report it once and cite both sources.

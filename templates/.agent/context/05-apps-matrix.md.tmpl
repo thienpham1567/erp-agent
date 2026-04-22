@@ -1,0 +1,39 @@
+# Apps Matrix
+
+Only used in monorepos that ship multiple apps from the same codebase (e.g.
+an admin + a client portal). Single-app projects can delete this file.
+
+The agent reads this matrix **before** choosing a pattern or import — every
+row represents a behavioral difference the agent must respect when touching
+files under the named app path.
+
+## Matrix
+
+Replace `<fill>` cells. Add / remove columns as your project needs.
+
+| Topic | `<app-a>` (path: `<fill>`) | `<app-b>` (path: `<fill>`) |
+|---|---|---|
+| Auth endpoint base | `<fill e.g. /admin/auth/*>` | `<fill e.g. /v1/auth/*>` |
+| Cookie name | `<fill>` | `<fill>` |
+| Forbidden UX | `<fill: page \| toast>` | `<fill: page \| toast>` |
+| Query-error hook | `<fill>` | `<fill>` |
+| Permission model | `<fill: OR \| AND>` | `<fill: OR \| AND>` |
+| Auth guard page | `<fill>` | `<fill>` |
+| Custom request headers | `<fill>` | `<fill>` |
+
+## Cross-app rules
+
+- Apps MUST NOT import from each other. Shared logic goes in `{{UI_PACKAGE}}` or
+  sibling shared workspace packages.
+- When a task spans both apps, open two plans — one per app — and verify each
+  separately.
+- Do not mix `<app-a>` authorization / error patterns into `<app-b>` pages
+  (or vice-versa).
+
+## How the agent uses this
+
+1. Resolve target app from the trigger (e.g. `TC target=apps/admin/...`) or
+   from the file path the user names.
+2. Look up the row that matches the behavior in question.
+3. If two apps differ, pick the app's value — never average or invent a
+   hybrid.

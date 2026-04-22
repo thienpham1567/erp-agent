@@ -21,7 +21,24 @@
             "nextVersion": { "type": "string" },
             "stateLib": { "type": "string", "enum": ["rtk-query", "react-query", "swr", "other"] },
             "i18nLib": { "type": "string" },
+            "i18nLocalesPath": { "type": "string", "description": "Relative path to i18n locale files, e.g. shared/i18n/locales." },
             "uiPackage": { "type": "string", "description": "Import alias for the shared UI package, e.g. @shared/ui." }
+          }
+        },
+        "apps": {
+          "type": "array",
+          "description": "Workspace apps in this repo (monorepos only). Single-app projects may omit this or list one entry.",
+          "items": {
+            "type": "object",
+            "required": ["name", "path"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "description": "e.g. admin, client." },
+              "path": { "type": "string", "minLength": 1, "description": "Relative path, e.g. apps/admin." },
+              "authCookie": { "type": "string" },
+              "apiBase": { "type": "string" },
+              "forbiddenUx": { "type": "string", "description": "page | toast | custom" }
+            },
+            "additionalProperties": true
           }
         }
       }
@@ -32,8 +49,20 @@
       "properties": {
         "frameworkRoot": { "type": "string", "description": "Absolute path to ~/.erp-agent/." },
         "profileRoot": { "type": "string", "description": "Path (relative to project root) to .agent/." },
-        "extractRoot": { "type": "string", "description": "Path for Figma/Confluence extraction artifacts." }
+        "extractRoot": { "type": "string", "description": "Path for Figma/Confluence extraction artifacts." },
+        "sharedRoot": { "type": "string", "description": "Path to shared workspace packages (e.g. shared/)." }
       }
+    },
+    "scripts": {
+      "type": "object",
+      "description": "Project composite scripts the agent should prefer over raw tooling.",
+      "properties": {
+        "verify": { "type": "string", "description": "Command that runs the full verify gate, e.g. pnpm run verify." },
+        "typecheck": { "type": "string" },
+        "lint": { "type": "string" },
+        "test": { "type": "string" }
+      },
+      "additionalProperties": true
     },
     "mcp": {
       "type": "object",

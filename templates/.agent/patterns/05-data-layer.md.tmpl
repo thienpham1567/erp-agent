@@ -3,45 +3,85 @@
 Rule: always create the data layer BEFORE writing any UI component.
 
 ## Files, in order
-1. `{feature}.type.ts`   — entity + request/response types
-2. `{feature}-api.ts`    — {{STATE_LIB}} endpoints and tag types
-3. `hooks/use{Feature}.ts` — thin wrappers around generated hooks
 
-## Example: RTK Query
+1. `{feature}.type.ts`        — entity + request/response types
+2. `{feature}-api.ts`         — endpoints injected into the shared `baseApi`
+3. `hooks/use{Feature}.ts`    — thin wrappers around generated hooks (optional)
+
+## CRITICAL — do NOT create a new `createApi`
+
+The project has a single shared base API (typically at
+`@shared/store/api` or `@/store/api`). All feature endpoints extend it via
+`api.injectEndpoints()`. Creating a new `createApi` breaks cache
+invalidation, fragments the store, and is a Blocker finding in review.
+
+## Example (RTK Query with `injectEndpoints`)
 
 ```ts
 // {feature}.type.ts
 export type {Feature} = { id: string; name: string; status: 'active' | 'inactive' }
 export type Create{Feature}Input = Omit<{Feature}, 'id'>
+export type {Feature}ListResponse = ApiListResponse<{Feature}>
+export type {Feature}QueryParams = BaseQueryParams & { status?: {Feature}['status'] }
+```
 
+```ts
 // {feature}-api.ts
-import { createApi } from '@reduxjs/toolkit/query/react'
+import { api } from '@/store/api'   // the shared baseApi — do NOT import createApi
 import type { ApiListResponse, BaseQueryParams } from '@shared/store/api'
-import type { {Feature}, Create{Feature}Input } from './{feature}.type'
 
-export const {feature}Api = createApi({
-  reducerPath: '{feature}Api',
-  baseQuery: /* your baseQuery */,
-  tagTypes: ['{Feature}'],
+import type { {Feature}, Create{Feature}Input, {Feature}ListResponse, {Feature}QueryParams } from './{feature}.type'
+
+export const {feature}Api = api.injectEndpoints({
   endpoints: (builder) => ({
-    get{Feature}s: builder.query<ApiListResponse<{Feature}>, BaseQueryParams>({
-      query: (params) => ({ url: '/v1/{features}', params }),
-      providesTags: ['{Feature}'],
+    get{Feature}s: builder.query<{Feature}ListResponse, {Feature}QueryParams>({
+      query: (params) => ({ url: '/{features}', params: params || {} }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.items.map(({ id }) => ({ type: '{Feature}' as const, id })),
+              { type: '{Feature}', id: 'LIST' },
+            ]
+          : [{ type: '{Feature}', id: 'LIST' }],
+      keepUnusedDataFor: 0,
     }),
-    get{Feature}: builder.query<{Feature}, string>({
-      query: (id) => ({ url: `/v1/{features}/${id}` }),
+    get{Feature}ById: builder.query<{Feature}, string>({
+      query: (id) => ({ url: `/{features}/${id}` }),
       providesTags: (_r, _e, id) => [{ type: '{Feature}', id }],
+      keepUnusedDataFor: 0,
     }),
     create{Feature}: builder.mutation<{Feature}, Create{Feature}Input>({
-      query: (body) => ({ url: '/v1/{features}', method: 'POST', body }),
-      invalidatesTags: ['{Feature}'],
+      query: (body) => ({ url: '/{features}', method: 'POST', body }),
+      invalidatesTags: [{ type: '{Feature}', id: 'LIST' }],
     }),
   }),
 })
 
 export const {
   useGet{Feature}sQuery,
-  useGet{Feature}Query,
+  useGet{Feature}ByIdQuery,
   useCreate{Feature}Mutation,
 } = {feature}Api
 ```
+
+## Tag strategy — required on every endpoint
+
+- **Lists**: provide `{ type, id: 'LIST' }` plus one tag per item.
+- **Detail**: provide `{ type, id: <the-id> }`.
+- **Mutations**: invalidate the `LIST` tag, and any affected `{ type, id }`.
+
+Missing `providesTags` / `invalidatesTags` is a Major finding — the cache
+will not refresh after mutations.
+
+## Hook wrapper
+
+Only add `hooks/use{Feature}.ts` when the consumer needs a non-trivial
+transform (pre-shaped options, derived state, multi-query composition).
+Re-export generated hooks directly otherwise.
+
+## Verification
+
+- `tsc --noEmit` passes.
+- `grep -R "createApi(" apps/*/src shared/` shows only the one baseApi.
+- Every endpoint has tags + `keepUnusedDataFor` (if the project convention
+  sets it).

@@ -5,8 +5,10 @@
 - `.env.confluence` — `CONFLUENCE_EMAIL`, `CONFLUENCE_API_TOKEN`.
 
 ## i18n catalogs
-- <fill paths to translation JSON files>
+- Locale files: `{{I18N_LOCALES_PATH}}` (one JSON per language — commonly `en.json`, `vi.json`).
+- Key convention: `<FEATURE>.<KEY>` uppercase snake, e.g. `CLIENTS.COLUMN_NAME`.
 
 ## API base URL
 - Dev:  <fill>
 - Prod: <fill>
+- For multi-app monorepos, list per-app base URLs in `.agent/context/05-apps-matrix.md`.

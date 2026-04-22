@@ -37,15 +37,18 @@ Walkthrough: [USAGE.md](USAGE.md).
 | `VF` | `07-verify.md` | Typecheck + lint |
 | `RV` | `08-code-review.md` | `react-doctor` + manual review |
 | `RF <path>` | `09-refactor-scan.md` | Refactor scope (no changes) |
+| `BR` | `10-bootstrap-registry.md` | Scan repo → fill `.agent/ui/*` + architecture |
 
 Brainstorming and TDD are opt-in.
 
 ## Hard gates
 
 1. No code before a plan (unless "skip plan").
-2. No hardcoded tokens — must map to `.agent/ui/01-tokens.md`.
-3. Grep `.agent/ui/components/` before building new shared components.
+2. No hardcoded tokens — resolve via the CSS source-of-truth indexed in `.agent/ui/01-tokens.md`.
+3. Grep `.agent/ui/components/` AND `<uiPackage>/shadcn-components/` before building new shared components.
 4. Data layer before UI.
+5. Tables use `DataTable` — never hand-roll `<table>`.
+6. Feature endpoints use `api.injectEndpoints()`; no new `createApi`.
 
 ## Layout
 

@@ -16,8 +16,12 @@ app/(protected)/<feature>/
 
 ## i18n
 - All visible strings go through `t('<FEATURE>.<KEY>')`.
-- Catalog location: <fill path to `en.json` / `vi.json`>.
+- Locale files: `{{I18N_LOCALES_PATH}}` (e.g. `en.json`, `vi.json`).
 - Never inline Vietnamese or English strings in JSX.
+
+## Icons
+- **CRITICAL**: use `lucide-react` exclusively. No other icon libraries, no
+  inline SVGs in components. Map Figma icon names → closest Lucide name.
 
 ## Commit style
 - Conventional Commits. `feat(<feature>): …`, `fix(<feature>): …`, `chore: …`.

@@ -1,6 +1,6 @@
 # Usage
 
-- [1. Init](#1-init) · [2. Fill profile](#2-fill-profile) · [3. Build feature (TC)](#3-build-feature-tc) · [4. Standalone](#4-standalone)
+- [1. Init](#1-init) · [2. Fill profile](#2-fill-profile) · [2b. Bootstrap (BR)](#2b-bootstrap-br) · [3. Build feature (TC)](#3-build-feature-tc) · [4. Standalone](#4-standalone)
 - [5. Review (RV)](#5-review-rv) · [6. Verify (VF)](#6-verify-vf) · [7. Refactor (RF)](#7-refactor-rf)
 - [8. Update](#8-update) · [9. Troubleshoot](#9-troubleshoot)
 
@@ -10,12 +10,14 @@
 cd /path/to/project
 erp-agent init
 erp-agent doctor
-echo "_extract/" >> .gitignore
-git add AGENTS.md .agent && git commit -m "chore: add erp-agent profile"
+git add AGENTS.md .agent .gitignore && git commit -m "chore: add erp-agent profile"
 ```
 
-Prompts: project name, Next.js version, state lib (`rtk-query|react-query|swr|other`), i18n lib, UI package alias.
-`init` refuses to overwrite an existing `AGENTS.md` or `.agent/`.
+Prompts: project name, Next.js version, state lib (`rtk-query|react-query|swr|other`),
+i18n lib, i18n locales path, UI package alias, shared-packages root, verify
+script, and workspace apps (blank for single-app, or `admin:apps/admin,client:apps/client`
+for monorepos). `init` refuses to overwrite an existing `AGENTS.md` or `.agent/`,
+and auto-appends `_extract/` to `.gitignore`.
 
 ## 2. Fill profile
 
@@ -23,9 +25,11 @@ Replace every `<fill>` in the scaffold. Priority order:
 
 | File | Why it matters |
 |---|---|
-| `.agent/ui/01-tokens.md` | Agent rejects hardcoded values not listed here. |
-| `.agent/ui/components/*.md` | Agent greps this before building new components. |
-| `.agent/context/0{1,2,3}-*.md` | Stack, architecture, conventions, i18n keys. |
+| `.agent/ui/01-tokens.md` | Index pointing at `<uiPackage>/styles/globals.css`. Agent rejects hardcoded values; tokens live in CSS. |
+| `.agent/ui/components/*.md` | Agent greps this before building new components. `components/README.md` explains the primitives-vs-composites split. |
+| `.agent/ui/02-hooks.md` | Split into **shared** (cross-app) + **per-app** tables. |
+| `.agent/context/05-apps-matrix.md` | Monorepos only — declares per-app differences (auth, forbidden UX, permission model). Delete if single-app. |
+| `.agent/context/0{1,2,3,4}-*.md` | Stack, architecture, conventions, env. |
 | `.agent/patterns/*.md` | Adjust the sample imports to match your real modules. |
 
 Component registry entry shape:
@@ -37,6 +41,21 @@ Component registry entry shape:
 - **Key props:** `variant`, `size`, `loading`
 - **Pattern:** see `.agent/patterns/04-form-page.md`
 ```
+
+## 2b. Bootstrap (BR)
+
+For **existing** codebases, after filling the stack/conventions manually,
+let the agent fill the registry for you:
+
+```
+BR
+```
+
+The skill walks `<uiPackage>/components/`, `<uiPackage>/shadcn-components/`,
+`<sharedRoot>/utils/src/hooks/`, and each app's `src/hooks/` and `src/app/`,
+populating `.agent/ui/02-hooks.md`, the component category files, and
+`.agent/context/02-architecture.md`. Run it once after `erp-agent init`;
+re-run after large refactors.
 
 ## 3. Build feature (TC)
 

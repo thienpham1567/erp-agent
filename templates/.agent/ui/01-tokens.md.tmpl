@@ -1,24 +1,42 @@
 # UI Tokens
 
-> Rule: every color, spacing, radius, and type ramp used in code MUST map to an entry here. If a Figma value has no token, add it here first.
+Every color, spacing, radius, and type ramp used in code MUST resolve to a
+named token. If a Figma value has no matching token, **add it to the
+source-of-truth file first**, then use it.
 
-## Colors
-<fill from tailwind-preset.ts + globals.css. Example row:>
-| Token | Value | Tailwind class | Notes |
-|---|---|---|---|
-| `primary` | `#2563eb` | `bg-primary text-primary` | CTA |
-| `muted-foreground` | `#64748b` | `text-muted-foreground` | Secondary text |
+## Source of truth
 
-## Spacing
-Tailwind default scale unless overridden.
-| Token | px | Class |
+The authoritative tokens live in code, not in this Markdown file:
+
+- **CSS variables & `@theme`**: `{{UI_PACKAGE}}/styles/globals.css` (Tailwind v4
+  CSS-first setup) — adjust path if your project stores styles elsewhere.
+- **Legacy Tailwind preset**: `{{UI_PACKAGE}}/styles/tailwind-preset.ts` (only
+  if still used).
+
+This file is an **index**, not a mirror. Keep the namespaces below in sync
+with the CSS; do not duplicate every value.
+
+## Namespaces (index)
+
+| Namespace | Example class | Where defined |
 |---|---|---|
-| 1 | 4 | `p-1` |
-| 2 | 8 | `p-2` |
-| 4 | 16 | `p-4` |
+| `text-*`           | `text-text-primary`, `text-text-secondary`, `text-muted-foreground` | `globals.css → @theme` |
+| `bg-*` / `border-*`| `bg-neutral-subtle`, `border-neutral-strong` | `globals.css → @theme` |
+| status colors      | `text-success`, `text-info`, `text-warning`, `text-destructive` | `globals.css → @theme` |
+| spacing            | Tailwind default unless `@theme` extends it | `globals.css` |
+| radii              | `rounded-sm`, `rounded-md`, `rounded-lg` | `globals.css → @theme` |
+| typography         | font family, weights, size ramps | `globals.css → @theme` + `tailwind-preset.ts` |
 
-## Radii
-<fill>
+## Rules
 
-## Typography
-<fill: font families, weight ramps, size ramps, and their Tailwind classes>
+- **CRITICAL**: no hex, no rgb, no arbitrary Tailwind values (`text-[#fff]`,
+  `p-[13px]`). All values route through `@theme` variables.
+- **CRITICAL**: if a Figma value has no token, open `globals.css`, add it to
+  `@theme`, commit that change, and only then use it in feature code.
+- **ENFORCED**: prefer semantic token names (`text-text-primary`,
+  `bg-neutral-subtle`) over raw palette names (`text-slate-900`).
+
+## Migration note
+
+If you're updating this file in an already-running project, do NOT copy the
+full token list here. Keep the index above and trust the CSS file.

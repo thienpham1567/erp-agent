@@ -15,6 +15,7 @@ before the first response — do not wait for a hook:
 2. `./.agent/context/01-stack.md`
 3. `./.agent/context/02-architecture.md`
 4. `./.agent/context/03-conventions.md`
+5. `./.agent/context/05-apps-matrix.md`  (multi-app monorepos only; skip if single-app)
 
 ## Trigger table
 | User input | Load skill file | Purpose |
@@ -28,14 +29,17 @@ before the first response — do not wait for a hook:
 | `VF` | `07-verify.md` | typecheck + lint (+ tests if user asks) |
 | `RV` | `08-code-review.md` | React Doctor + severity-graded manual review |
 | `RF <path>` | `09-refactor-scan.md` | Scope refactor proposals |
+| `BR` | `10-bootstrap-registry.md` | One-shot: scan the repo and fill `.agent/ui/*` + `02-architecture.md` |
 
 Every skill file lives under `{{FRAMEWORK_ROOT}}/skills/`. Load by reading the file; do not summarise from memory.
 
 ## Hard gates
 1. **No code before a plan.** If no plan exists and the user did not say "skip plan", load `03-plan-feature.md` first.
-2. **No hardcoded tokens.** All colors / spacing / radii / typography must map to entries in `./.agent/ui/01-tokens.md`. If the token is missing, add it there first, then use it.
-3. **Grep before build.** Before creating a new shared component, grep `./.agent/ui/components/` for a match. Only build new if nothing fits.
+2. **No hardcoded tokens.** All colors / spacing / radii / typography must resolve to a token. The source of truth lives in `{{UI_PACKAGE}}/styles/globals.css` (see `./.agent/ui/01-tokens.md`). If a value is missing, add it there first, then use it.
+3. **Grep before build.** Before creating a new shared component, grep `./.agent/ui/components/` AND `{{UI_PACKAGE}}/shadcn-components/` for a match. Only build new if nothing fits.
 4. **Data layer before UI.** `04-scaffold-data.md` must complete before `05-transform-code.md` starts.
+5. **Tables use DataTable.** Any list/grid in the design MUST use `DataTable` from `{{UI_PACKAGE}}/components/table`. Never implement manual `<table>` or `<div>`-based grids.
+6. **One `createApi`.** Extend the shared base API via `api.injectEndpoints()`. Do NOT call `createApi` from feature code.
 
 ## Brainstorm policy
 For vague, multi-screen, or architecturally unclear requests, first ask:

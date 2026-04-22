@@ -20,6 +20,7 @@ This file documents the decision tree the agent uses to pick a skill, and declar
 | `VF` | `07-verify.md` |
 | `RV` | `08-code-review.md` |
 | `RF <path>` | `09-refactor-scan.md` |
+| `BR` | `10-bootstrap-registry.md` |
 
 ## Chains
 - **TC chain**: `02-extract-context → 03-plan-feature → 04-scaffold-data → 05-transform-code → 07-verify`
@@ -34,3 +35,5 @@ On vague or complex requests, the agent asks: "Brainstorm first? (yes/no)" (or t
 2. No hardcoded design tokens.
 3. Grep `.agent/ui/components/` before building a new shared component.
 4. Data layer before UI.
+5. Tables use `DataTable` — never hand-roll `<table>` or grid `<div>` layouts.
+6. Feature endpoints use `api.injectEndpoints()`; no new `createApi` calls.
