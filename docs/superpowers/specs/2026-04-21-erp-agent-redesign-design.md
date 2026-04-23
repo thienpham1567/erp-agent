@@ -23,7 +23,7 @@ This redesign converts `erp-agent` into a **reusable framework** that any Next.j
 - **LLM precision** — load only what the current task needs; each file has one concern.
 - **Opt-in governance** — brainstorming and TDD are optional; hard gates exist where safety matters (plan before code, tokens before UI).
 - **Antigravity-compatible** — no reliance on Claude Code's auto-skill trigger; `AGENTS.md` is an explicit router.
-- **Preserve working code** — existing MCP clients (`figma_mcp_client.js`, `confluence_mcp_client.js`) move unchanged into the framework `lib/`.
+- **Preserve working code** — existing MCP clients (`figma_client.js`, `confluence_client.js`) move unchanged into the framework `lib/`.
 
 ### Non-Goals
 - Multi-agent BMAD-style role-play (PM, Architect, QA personas). We use **skills as workflows**, not personas.
@@ -71,8 +71,8 @@ The framework answers **"how to work"**. The profile answers **"what this projec
 │   ├── 08-code-review.md
 │   └── 09-refactor-scan.md
 ├── lib/
-│   ├── figma_mcp_client.js        Unchanged from current repo
-│   └── confluence_mcp_client.js   Unchanged from current repo
+│   ├── figma_client.js        Unchanged from current repo
+│   └── confluence_client.js   Unchanged from current repo
 └── schema/
     └── profile.schema.json        JSON Schema for .agent/profile.json
 ```
@@ -273,7 +273,7 @@ Mapping of existing content to new locations:
 | `workflow.md` Step 4 component registry (~200 lines) | Split into `templates/.agent/ui/components/*.md.tmpl` |
 | `workflow.md` Step 5 page shell + DataTable + detail patterns | Split into `templates/.agent/patterns/0[1-4]-*.md.tmpl` |
 | `workflow.md` Step 6 DoD | `templates/.agent/checklists/dod-feature.md.tmpl` |
-| `figma_mcp_client.js`, `confluence_mcp_client.js` | `~/.erp-agent/lib/` (unchanged) |
+| `figma_client.js`, `confluence_client.js` | `~/.erp-agent/lib/` (unchanged) |
 | `design-to-code/bmad-skill-manifest.yaml` | Deprecated — BMAD persona is replaced by the skill router |
 | `design-to-code/USAGE.md` | Merged into `~/.erp-agent/README.md` |
 

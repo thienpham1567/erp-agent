@@ -26,16 +26,16 @@
 ### Task 1: Restructure repo — create `lib/` and move MCP clients
 
 **Files:**
-- Move: `confluence_mcp_client.js` → `lib/confluence_mcp_client.js`
-- Move: `figma_mcp_client.js` → `lib/figma_mcp_client.js`
+- Move: `confluence_client.js` → `lib/confluence_client.js`
+- Move: `figma_client.js` → `lib/figma_client.js`
 - Create: `lib/README.md`
 
 - [ ] **Step 1: Create `lib/` and move MCP clients**
 
 ```bash
 mkdir -p lib
-git mv confluence_mcp_client.js lib/confluence_mcp_client.js
-git mv figma_mcp_client.js lib/figma_mcp_client.js
+git mv confluence_client.js lib/confluence_client.js
+git mv figma_client.js lib/figma_client.js
 ```
 
 - [ ] **Step 2: Write `lib/README.md`**
@@ -45,15 +45,15 @@ git mv figma_mcp_client.js lib/figma_mcp_client.js
 
 Reusable Node.js ESM modules that talk to external services.
 
-- `figma_mcp_client.js` — wraps the Figma Desktop MCP Server (Streamable HTTP at `http://127.0.0.1:3845/mcp`). Exports `FigmaMCPClient` and `parseFigmaUrl`.
-- `confluence_mcp_client.js` — wraps the Confluence REST API with Basic Auth. Reads `CONFLUENCE_EMAIL` and `CONFLUENCE_API_TOKEN` from the environment. Exports `ConfluenceMCPClient` and `parseConfluenceUrl`.
+- `figma_client.js` — wraps the Figma Desktop MCP Server (Streamable HTTP at `http://127.0.0.1:3845/mcp`). Exports `FigmaMCPClient` and `parseFigmaUrl`.
+- `confluence_client.js` — wraps the Confluence REST API with Basic Auth. Reads `CONFLUENCE_EMAIL` and `CONFLUENCE_API_TOKEN` from the environment. Exports `ConfluenceMCPClient` and `parseConfluenceUrl`.
 
 Framework skills (`skills/02-extract-context.md`, `skills/06-fetch-spec.md`) import these from `~/.erp-agent/lib/`.
 ```
 
 - [ ] **Step 3: Verify modules still resolve**
 
-Run: `node --check lib/figma_mcp_client.js && node --check lib/confluence_mcp_client.js`
+Run: `node --check lib/figma_client.js && node --check lib/confluence_client.js`
 Expected: no output (success).
 
 - [ ] **Step 4: Commit**
@@ -1465,7 +1465,7 @@ requires: []
 Pull Figma design context (and optional Confluence spec) into the project's extract folder.
 
 ## Preconditions
-- `~/.erp-agent/lib/figma_mcp_client.js` exists.
+- `~/.erp-agent/lib/figma_client.js` exists.
 - Figma Desktop MCP Server running at `http://127.0.0.1:3845/mcp`.
 - If `spec=<url>` is given: `.env.confluence` present with `CONFLUENCE_EMAIL` and `CONFLUENCE_API_TOKEN`.
 - A task id is known (ask the user if not; example: `ERP-1318`).
@@ -1473,10 +1473,10 @@ Pull Figma design context (and optional Confluence spec) into the project's extr
 ## Steps
 1. Parse the trigger: collect one or more Figma URLs and an optional `spec=<confluence-url>` and optional target folder. If labels are provided (`list=<url>`), keep them; otherwise auto-derive from Figma node names.
 2. Create `_extract/<task-id>/` at the project root. Add `_extract/` to `.gitignore` if not already.
-3. For each Figma URL, write an ES module scratch script `_extract/<task-id>/extract_figma_<label>.mjs` that imports `FigmaMCPClient` from `~/.erp-agent/lib/figma_mcp_client.js`, calls `getFullDesign({ url })`, and writes: `designContext.txt`, `metadata.xml`, `screenshot.png`.
+3. For each Figma URL, write an ES module scratch script `_extract/<task-id>/extract_figma_<label>.mjs` that imports `FigmaMCPClient` from `~/.erp-agent/lib/figma_client.js`, calls `getFullDesign({ url })`, and writes: `designContext.txt`, `metadata.xml`, `screenshot.png`.
 4. Verify pixel details: call Figma REST `https://api.figma.com/v1/files/<fileKey>/nodes?ids=<nodeId>` with `X-Figma-Token` from `.env.figma`. Walk the tree and extract `absoluteBoundingBox`, `layoutMode`, `itemSpacing`, `padding*`, `cornerRadius`, `fills`, `strokes`, `style.font*`, `characters`, `type==='LINE'`, `componentProperties`. Save to `figma_tree.txt`.
 5. If MCP/REST returns 429: fallback order is (a) direct REST with token, (b) analyze `screenshot.png` via vision, (c) reuse cached `figma_tree.txt`, (d) fetch child nodes incrementally.
-6. If `spec=<url>` given: write `_extract/<task-id>/extract_spec.mjs` that loads `.env.confluence`, imports `ConfluenceMCPClient` from `~/.erp-agent/lib/confluence_mcp_client.js`, calls `getPageAsMarkdown(url)` (or `getMultiplePagesAsMarkdown` for multiple), writes `spec.md`.
+6. If `spec=<url>` given: write `_extract/<task-id>/extract_spec.mjs` that loads `.env.confluence`, imports `ConfluenceMCPClient` from `~/.erp-agent/lib/confluence_client.js`, calls `getPageAsMarkdown(url)` (or `getMultiplePagesAsMarkdown` for multiple), writes `spec.md`.
 7. Run the scratch scripts from the extract folder; clean them up afterwards if you wish.
 8. Summarise what was extracted (component list, tokens found, screens + node ids, spec sections) for the user. If requirements are provided, also produce an extracted-requirements table (API endpoints, data model, business rules, user actions, states).
 
@@ -1675,7 +1675,7 @@ requires: []
 
 ## Steps
 1. Create `_extract/<task-id>/` if missing.
-2. Write `_extract/<task-id>/extract_spec.mjs` that loads `.env.confluence`, imports `ConfluenceMCPClient` from `~/.erp-agent/lib/confluence_mcp_client.js`, and calls:
+2. Write `_extract/<task-id>/extract_spec.mjs` that loads `.env.confluence`, imports `ConfluenceMCPClient` from `~/.erp-agent/lib/confluence_client.js`, and calls:
    - single: `getPageAsMarkdown(url)`
    - multiple: `getMultiplePagesAsMarkdown([url1, url2])`
 3. Save each page as `_extract/<task-id>/spec-<page-slug>.md` (or plain `spec.md` for single).

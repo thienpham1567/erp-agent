@@ -12,7 +12,7 @@ requires: []
 
 ## Steps
 1. Create `_extract/<task-id>/` if missing.
-2. Write `_extract/<task-id>/extract_spec.mjs` that loads `.env.confluence`, imports `ConfluenceMCPClient` from `~/.erp-agent/lib/confluence_mcp_client.js`, and calls:
+2. Write `_extract/<task-id>/extract_spec.mjs` that loads `.env.confluence`, imports `ConfluenceMCPClient` from `<frameworkRoot>/lib/confluence_client.js` (substitute the absolute `frameworkRoot` from `.agent/profile.json → paths.frameworkRoot`), and calls:
    - single: `getPageAsMarkdown(url)`
    - multiple: `getMultiplePagesAsMarkdown([url1, url2])`
 3. Save each page as `_extract/<task-id>/spec-<page-slug>.md` (or plain `spec.md` for single).
